@@ -5,9 +5,17 @@
 #include <time.h>
 #include <sys/time.h>
 #include "modbus.h"
+#include "config.h"
 
 #define SLAVE     0x01
 
+#ifdef PR_MOD_X86
+char serialPort[] = "/dev/ttyUSB0";
+#endif
+
+#ifdef PR_MOD_MIPS
+char serialPort[] = "/dev/ttys0";
+#endif
 /*
  uint32_t gettime(void) {
  struct timeval tv;
