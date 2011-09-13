@@ -1,26 +1,30 @@
-export HOMEDIR := ~/pr_modbus/kernel/openwrt
+export HOMEDIR := /home/prilag/pr_modbus/kernel/openwrt
 export TC_DIR := $(HOMEDIR)/staging_dir/toolchain-mipsel_gcc-linaro_uClibc-0.9.32
+export STAGINGDIR := $(HOMEDIR)/staging_dir/target-mipsel_uClibc-0.9.32
 
 export CC := $(TC_DIR)/bin/mipsel-openwrt-linux-gcc
-export LIB := $(TC_DIR)/lib /usr/lib/mysql -lmysqlclient
-export INC := $(TC_DIR)/include /usr/include/mysql -DBIG_JOINS=1 -fPIC
 
-#export LIB += /usr/lib/mysql -lmysqlclient
-#export INC += /usr/include/mysql  -DBIG_JOINS=1 -fPIC
+# this is for embedded compilation #
+export LIB := -L$(STAGINGDIR)/usr/lib -luClibc++ -L$(STAGINGDIR)/usr/lib/mysql -lmysqlclient -lz
+export INC := -I$(STAGINGDIR)/usr/include/mysql -DBIG_JOINS=1 -fPIC -I$(TC_DIR)/include
 
-ACTUAL_CFLAGS  = -Wall
-ACTUAL_LDFLAGS = 
+# this is for desktop compilation #
+#export LIB = /usr/lib/mysql -lmysqlclient
+#export INC = /usr/include/mysql  -DBIG_JOINS=1 -fPIC
+
+CFLAGS  = -Wall
+LDFLAGS =
+
 SRCS = test.c modbus.c sgpio.c
-#SRCS = modbus_test.c
 OBJS = ${SRCS:%.c=%.o}
 
 .c.o:
 	@ echo "----- object file is ready -----"
-	$(CC) -c $(ACTUAL_CFLAGS) -I$(INC) $^
+	$(CC) -c $(CFLAGS) $(INC) $^
 
 all: ${OBJS}
 	@ echo "[1] compiling"
-	$(CC) ${OBJS} $(ACTUAL_LDFLAGS) -L$(LIB) -o modbus_test
+	$(CC) ${OBJS} $(LDFLAGS) $(LIB) -o modbus_test
 
 clean:
 	rm $(BUILD)*.o
