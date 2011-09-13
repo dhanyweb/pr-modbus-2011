@@ -56,6 +56,10 @@
 
 #define UNKNOWN_ERROR_MSG "Not defined in modbus specification"
 
+#ifndef UINT16_MAX
+#define UINT16_MAX (65535U)
+#endif
+
 /* This structure reduces the number of params in functions and so
  * optimizes the speed of execution (~ 37%). */
 typedef struct {
@@ -641,7 +645,7 @@ static int modbus_receive(modbus_param_t *mb_param, uint8_t *query,
 		if (query_nb_value == response_nb_value) {
 			ret = response_nb_value;
 		} else {
-			char *s_error = malloc(64 * sizeof(char));
+			char *s_error = (char*)malloc(64 * sizeof(char));
 			sprintf(s_error,
 					"Quantity (%d) not corresponding to the query (%d)",
 					response_nb_value, query_nb_value);
@@ -682,7 +686,7 @@ static int modbus_receive(modbus_param_t *mb_param, uint8_t *query,
 					/* The chances are low to hit this
 					 case but it can avoid a vicious
 					 segfault */
-					char *s_error = malloc(64 * sizeof(char));
+					char *s_error = (char*)malloc(64 * sizeof(char));
 					sprintf(s_error, "Invalid exception code %d",
 							response[offset + 2]);
 					error_treat(mb_param, INVALID_EXCEPTION_CODE, s_error);
