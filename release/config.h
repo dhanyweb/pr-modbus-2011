@@ -11,8 +11,6 @@
 #include <stdint.h>
 #include "parser.h"
 
-char serialPort[] = "/dev/ttyS1";
-
 #define MODBUS_DEV0_ADDR     0x01
 
 /* ADDRESS MAP */

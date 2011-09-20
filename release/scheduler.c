@@ -6,19 +6,26 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <semaphore.h>
+#include <sys/types.h>
 
 extern sem_t scheduler_tick;
 
 void *
 scheduler(void *arg) {
 	int sval = 100;
+	int sampletime;
+
+	sampletime = *(int*)arg;
+
+	//printf("scheduling: %d sec\n", sampletime);
 
 	while (1) {
-		sem_getvalue(&scheduler_tick, &sval);
-		printf("scheduler | s: %d\n", sval);
-		sleep(1);
+		//sem_getvalue(&scheduler_tick, &sval);
+		//printf("scheduler | s: %d\n", sval);
+		sleep(sampletime);
 		sem_post(&scheduler_tick);
 	}
 }
