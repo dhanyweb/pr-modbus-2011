@@ -1,10 +1,11 @@
-
 // include section
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <time.h>
+#include <pthread.h>
+#include <semaphore.h>
 
 #include <my_global.h>
 #include <mysql.h>
@@ -29,6 +30,11 @@ uint8_t *tab_rp_status;
 uint16_t *tab_rp_registers;
 modbus_param_t mb_param;
 measured_values_t measurement; // u, i, p, cosfi, energy
+
+sem_t scheduler_tick;
+
+void * scheduler(void *arg);
+void * dataacq(void *arg);
 
 // main function
 int main(int argc, char** argv) {
@@ -100,6 +106,42 @@ int main(int argc, char** argv) {
 	 */
 
 	printf("data acquisition started\t[OK]\n");
+
+	// creating threads
+
+
+	pthread_t *threads;
+	pthread_attr_t pthread_scheduler_attr;
+	pthread_attr_t pthread_dataacq_attr;
+
+	int err;
+
+	threads = (pthread_t *) malloc(2 * sizeof(*threads));
+	pthread_attr_init(&pthread_scheduler_attr);
+	pthread_attr_init(&pthread_dataacq_attr);
+
+	sem_init(&scheduler_tick, 0, 0);
+
+	if (err = pthread_create(&threads[0], &pthread_scheduler_attr, scheduler,
+			NULL)) {
+		printf("pthread_create (scheduler) %s\n", strerror(err));
+		exit(1);
+	}
+
+	if (err = pthread_create(&threads[1], &pthread_dataacq_attr, dataacq, NULL)) {
+		printf("pthread_create (dataacq) %s\n", strerror(err));
+		exit(1);
+	}
+
+	if (err = pthread_join(threads[1], NULL )) {
+		printf("pthread_join: %s\n", strerror(err));
+		exit(1);
+	}
+
+	if (err = pthread_join(threads[0], NULL )) {
+		printf("pthread_join: %s\n", strerror(err));
+		exit(1);
+	}
 
 	while (1) {
 		/*

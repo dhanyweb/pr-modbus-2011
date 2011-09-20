@@ -1,13 +1,13 @@
 export CC = gcc
 
 # this is for desktop compilation #
-export LIB = -L/usr/lib/mysql -lmysqlclient
+export LIB = -L/usr/lib/mysql -lmysqlclient -lpthread
 export INC = -I/usr/include/mysql  -DBIG_JOINS=1 -fPIC
 
 CFLAGS  = -Wall
 LDFLAGS =
 
-SRCS = test.c modbus.c sgpio.c parser.c
+SRCS = main.c modbus.c sgpio.c parser.c scheduler.c dataacq.c
 
 OBJS = ${SRCS:%.c=%.o}
 
