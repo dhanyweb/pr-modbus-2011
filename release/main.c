@@ -89,28 +89,27 @@ int main(int argc, char** argv) {
 	printf("---------------------------\n");
 
 	// init RTU
-	/*
-	 modbus_init_rtu(&mb_param, serialPort, 38400, "none", 8, 1);
-	 if (modbus_connect(&mb_param) == -1) {
-	 printf("error - connection failed\n");
-	 exit(1);
-	 } else
-	 printf("connected to modbus\t[OK]\n");
-	 */
+#ifdef MODE_RELEASE
+	modbus_init_rtu(&mb_param, serialPort, 38400, "none", 8, 1);
+	if (modbus_connect(&mb_param) == -1) {
+		printf("error - connection failed\n");
+		exit(1);
+	} else
+	printf("connected to modbus\t[OK]\n");
+	*/
 	//modbus_set_debug(&mb_param, TRUE);
-
+#endif // MODE_RELEASE
 	printf("connected to modbus\t[OK]\n");
 
 	// allocate and initialize the memory to store the status and registers
-	/*
-	 tab_rp_status = (uint8_t *) malloc(MAX_STATUS * sizeof(uint8_t));
-	 memset(tab_rp_status, 0, MAX_STATUS * sizeof(uint8_t));
+#ifdef MODE_RELEASE
+	tab_rp_status = (uint8_t *) malloc(MAX_STATUS * sizeof(uint8_t));
+	memset(tab_rp_status, 0, MAX_STATUS * sizeof(uint8_t));
 
-	 tab_rp_registers = (uint16_t *) malloc(MAX_REGISTERS * sizeof(uint16_t));
-	 memset(tab_rp_registers, 0, MAX_REGISTERS * sizeof(uint16_t));
-	 */
-
-	printf("data acquisition started\t[OK]\n");
+	tab_rp_registers = (uint16_t *) malloc(MAX_REGISTERS * sizeof(uint16_t));
+	memset(tab_rp_registers, 0, MAX_REGISTERS * sizeof(uint16_t));
+#endif // MODE_RELEASE
+	printf("data acquisition\t[OK]\n");
 
 	// creating threads
 	threads = (pthread_t *) malloc(2 * sizeof(*threads));
@@ -125,7 +124,8 @@ int main(int argc, char** argv) {
 		exit(1);
 	}
 
-	if ((err = pthread_create(&threads[1], &pthread_dataacq_attr, dataacq, NULL))) {
+	if ((err
+			= pthread_create(&threads[1], &pthread_dataacq_attr, dataacq, NULL))) {
 		printf("pthread_create (dataacq) %s\n", strerror(err));
 		exit(1);
 	}

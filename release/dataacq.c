@@ -55,21 +55,21 @@ dataacq(void *arg) {
 			for (i_dev = 0; i_dev < config.meters; i_dev++) {
 
 				dev = config.idvector[i_dev];
-				printf("device %d\n", dev);
-				/*
-				 // reading voltages (3)
-				 ret = read_holding_registers(&mb_param, dev,
-				 ADDR_UL1, 3, &meas[dev].UL1);
-				 // reading currents (3)
-				 ret = read_holding_registers(&mb_param, dev,
-				 ADDR_IL1, 3, &meas[dev].IL1);
-				 // reading powers (3)
-				 ret = read_holding_registers(&mb_param, dev,
-				 ADDR_PSUM, 3, &meas[dev].PSUM);
-				 // reading cosphisum (1)
-				 ret = read_holding_registers(&mb_param, dev,
-				 ADDR_COSPHISUM, 1, &meas[dev].COSPHISUM);
-				 */
+				//printf("device %d\n", dev);
+#ifdef MODE_RELEASE
+				// reading voltages (3)
+				ret = read_holding_registers(&mb_param, dev,
+						ADDR_UL1, 3, &meas[dev].UL1);
+				// reading currents (3)
+				ret = read_holding_registers(&mb_param, dev,
+						ADDR_IL1, 3, &meas[dev].IL1);
+				// reading powers (3)
+				ret = read_holding_registers(&mb_param, dev,
+						ADDR_PSUM, 3, &meas[dev].PSUM);
+				// reading cosphisum (1)
+				ret = read_holding_registers(&mb_param, dev,
+						ADDR_COSPHISUM, 1, &meas[dev].COSPHISUM);
+#endif // MODE_RELEASE
 #ifdef MODE_TEST
 				meas[dev].UL1 = test_vector[i_avg - 1];
 				meas[dev].UL2 = test_vector[i_avg - 1];
@@ -97,16 +97,16 @@ dataacq(void *arg) {
 			sem_wait(&scheduler_tick);
 		} // avg
 
-		printf("upload!\n");
+		//printf("upload!\n");
 
 		// upload data
 		for (i_dev = 0; i_dev < config.meters; i_dev++) {
 			// reading real energy (1)
 			dev = config.idvector[i_dev];
-			/*
+#ifdef MODE_RELEASE
 			 ret = read_holding_registers(&mb_param, dev, ADDR_REALENERGY, 1,
 			 &meas[dev].REALENERGY);
-			 */
+#endif // MODE_RELEASE
 
 			sprintf(
 					&query[0],
@@ -153,7 +153,7 @@ void average_null(int meters) {
 		avg.COSPHISUM[dev] = 0;
 	}
 
-	printf("avg null\n");
+	//printf("avg null\n");
 
 	return;
 }
