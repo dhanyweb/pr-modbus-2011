@@ -15,10 +15,12 @@ typedef struct config {
 	int idvector[128];
 	int sampletime;
 	int uploadtime;
+	int samplespercycle;
 	char serverip[20];
 	char user[50];
 	char password[50];
 	char database[50];
+	char table[50];
 } config_t;
 
 config_t *parser(char* configfile);

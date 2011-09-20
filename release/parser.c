@@ -49,6 +49,8 @@ config_t *parser(char* configfile) {
 			strcpy(config.password, value);
 		} else if (strcmp(parameter, "database") == 0) {
 			strcpy(config.database, value);
+		} else if (strcmp(parameter, "table") == 0) {
+			strcpy(config.table, value);
 		} else if (strcmp(parameter, "idvector") == 0) {
 			config.idvector[0] = atoi(strtok(value, "[ ]"));
 			for (i = 1; i < config.meters; i++) {
@@ -57,13 +59,16 @@ config_t *parser(char* configfile) {
 		}
 	}
 
+	config.samplespercycle = config.uploadtime / config.sampletime;
+
 	// printing variables
 	printf(
 			"number of meters\t%d\nsample interval\t\t%d\nupload interval\t\t%d\n",
 			config.meters, config.sampletime, config.uploadtime);
 	printf(
-			"server address\t\t%s\nuser\t\t\t%s\npassword\t\t%s\ndatabase\t\t%s\n",
-			config.serverip, config.user, config.password, config.database);
+			"server address\t\t%s\nuser\t\t\t%s\npassword\t\t%s\ndatabase\t\t%s\nsamples per cycle\t%d\n",
+			config.serverip, config.user, config.password, config.database,
+			config.samplespercycle);
 	printf("idvector\t\t[ ");
 	for (i = 0; i < config.meters; i++) {
 		printf("%d ", config.idvector[i]);

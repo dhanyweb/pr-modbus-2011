@@ -1,5 +1,4 @@
-
-// include section
+// include - common
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -7,11 +6,12 @@
 #include <time.h>
 #include <pthread.h>
 #include <semaphore.h>
-
+// include - mysql
 #include <my_global.h>
 #include <mysql.h>
-
+// include - modbus
 #include "modbus.h"
+// include - configuration
 #include "config.h"
 
 // definitions
@@ -21,28 +21,34 @@ struct timespec req; // sample interval structure
 int ret; // return value for error-checking
 config_t config; // configuration
 config_t *config_p; // configuration
-// mysql
+sem_t scheduler_tick; // semaphore
+int err; // return value
+// global variables- mysql
 MYSQL *conn; // mysql connector
 MYSQL_RES *res; // mysql result
 MYSQL_ROW row; // mysql row
-// modbus
+// global variables - modbus
 char serialPort[] = "/dev/ttyS1";
+uint8_t *tab_rp_status;
+uint16_t *tab_rp_registers;
+modbus_param_t mb_param;
+// multi-threading variables
+pthread_t *threads;
+pthread_attr_t pthread_scheduler_attr;
+pthread_attr_t pthread_dataacq_attr;
 
-sem_t scheduler_tick;
-
-void * scheduler(void *arg);
-void * dataacq(void *arg);
+// thread functions
+void* scheduler(void *arg);
+void* dataacq(void *arg);
 
 // main function
 int main(int argc, char** argv) {
-
-	int err;
 
 	printf("\n-== modbus data acquisition ==-\n\n");
 
 	// reading config file
 	if ((config_p = parser(CONFIGFILE)) == NULL) {
-		perror("config file read error!");
+		printf("config file read error!");
 		exit(1);
 	}
 	// parse config, copy configuration to workspace
@@ -63,13 +69,13 @@ int main(int argc, char** argv) {
 	// connect to database
 	if (!mysql_real_connect(conn, config.serverip, config.user,
 			config.password, config.database, 0, NULL, 0)) {
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		printf("%s\n", mysql_error(conn));
 		exit(1);
 	}
 
 	// send SQL query
 	if (mysql_query(conn, "SHOW TABLES")) {
-		fprintf(stderr, "%s\n", mysql_error(conn));
+		printf("%s\n", mysql_error(conn));
 		exit(1);
 	}
 
@@ -107,35 +113,30 @@ int main(int argc, char** argv) {
 	printf("data acquisition started\t[OK]\n");
 
 	// creating threads
-
-	pthread_t *threads;
-	pthread_attr_t pthread_scheduler_attr;
-	pthread_attr_t pthread_dataacq_attr;
-
 	threads = (pthread_t *) malloc(2 * sizeof(*threads));
 	pthread_attr_init(&pthread_scheduler_attr);
 	pthread_attr_init(&pthread_dataacq_attr);
 
 	sem_init(&scheduler_tick, 0, 1);
 
-	if (err = pthread_create(&threads[0], &pthread_scheduler_attr, scheduler,
-			(void*) &config.sampletime)) {
+	if ((err = pthread_create(&threads[0], &pthread_scheduler_attr, scheduler,
+			(void*) &config.sampletime))) {
 		printf("pthread_create (scheduler) %s\n", strerror(err));
 		exit(1);
 	}
 
-	if (err = pthread_create(&threads[1], &pthread_dataacq_attr, dataacq, NULL)) {
+	if ((err = pthread_create(&threads[1], &pthread_dataacq_attr, dataacq, NULL))) {
 		printf("pthread_create (dataacq) %s\n", strerror(err));
 		exit(1);
 	}
 
 	// starting threads
-	if (err = pthread_join(threads[0], NULL )) {
+	if ((err = pthread_join(threads[0], NULL ))) {
 		printf("pthread_join (scheduler) %s\n", strerror(err));
 		exit(1);
 	}
 
-	if (err = pthread_join(threads[1], NULL )) {
+	if ((err = pthread_join(threads[1], NULL ))) {
 		printf("pthread_join (dataacq) %s\n", strerror(err));
 		exit(1);
 	}
@@ -143,37 +144,11 @@ int main(int argc, char** argv) {
 	printf("endpoint reached\n");
 
 	// free mem
-	/*
-	 free(tab_rp_status);
-	 free(tab_rp_registers);
-	 */
+	free(tab_rp_status);
+	free(tab_rp_registers);
 
 	// close connection
-	/*
-	 modbus_close(&mb_param);
-	 */
+	modbus_close(&mb_param);
 
-	return 0;
+	exit(0);
 }
-
-/*
- mysql> DESCRIBE measure_new;
- +------------+-------------+------+-----+---------+-------+
- | Field      | Type        | Null | Key | Default | Extra |
- +------------+-------------+------+-----+---------+-------+
- | meter_id   | smallint(6) | YES  |     | NULL    |       |
- | time       | datetime    | YES  |     | NULL    |       |
- | ul1        | float       | YES  |     | NULL    |       |
- | ul2        | float       | YES  |     | NULL    |       |
- | ul3        | float       | YES  |     | NULL    |       |
- | il1        | smallint(6) | YES  |     | NULL    |       |
- | il2        | smallint(6) | YES  |     | NULL    |       |
- | il3        | smallint(6) | YES  |     | NULL    |       |
- | psum       | smallint(6) | YES  |     | NULL    |       |
- | qsum       | smallint(6) | YES  |     | NULL    |       |
- | ssum       | smallint(6) | YES  |     | NULL    |       |
- | cosphisum  | smallint(6) | YES  |     | NULL    |       |
- | realenergy | int(11)     | YES  |     | NULL    |       |
- +------------+-------------+------+-----+---------+-------+
- 13 rows in set (0.00 sec)
- */

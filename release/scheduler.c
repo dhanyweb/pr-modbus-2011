@@ -9,16 +9,17 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <semaphore.h>
+#include <pthread.h>
 #include <sys/types.h>
 
 extern sem_t scheduler_tick;
 
-void *
+void*
 scheduler(void *arg) {
-	int sval = 100;
+	//int sval;
 	int sampletime;
 
-	sampletime = *(int*)arg;
+	sampletime = *(int*) arg;
 
 	//printf("scheduling: %d sec\n", sampletime);
 
@@ -28,4 +29,6 @@ scheduler(void *arg) {
 		sleep(sampletime);
 		sem_post(&scheduler_tick);
 	}
+
+	pthread_exit(0);
 }
