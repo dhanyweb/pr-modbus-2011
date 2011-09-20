@@ -1,21 +1,14 @@
-export HOMEDIR := /home/prilag/pr_modbus/kernel/openwrt
-export TC_DIR := $(HOMEDIR)/staging_dir/toolchain-mipsel_gcc-linaro_uClibc-0.9.32
-export STAGINGDIR := $(HOMEDIR)/staging_dir/target-mipsel_uClibc-0.9.32
-
-export CC := $(TC_DIR)/bin/mipsel-openwrt-linux-gcc
-
-# this is for embedded compilation #
-export LIB := -L$(STAGINGDIR)/usr/lib -luClibc++ -L$(STAGINGDIR)/usr/lib/mysql -lmysqlclient -lz
-export INC := -I$(STAGINGDIR)/usr/include/mysql -DBIG_JOINS=1 -fPIC -I$(TC_DIR)/include
+export CC = gcc
 
 # this is for desktop compilation #
-#export LIB = /usr/lib/mysql -lmysqlclient
-#export INC = /usr/include/mysql  -DBIG_JOINS=1 -fPIC
+export LIB = -L/usr/lib/mysql -lmysqlclient
+export INC = -I/usr/include/mysql  -DBIG_JOINS=1 -fPIC
 
 CFLAGS  = -Wall
 LDFLAGS =
 
-SRCS = test.c modbus.c sgpio.c
+SRCS = test.c modbus.c sgpio.c parser.c
+
 OBJS = ${SRCS:%.c=%.o}
 
 .c.o:
